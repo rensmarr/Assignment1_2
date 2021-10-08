@@ -13,13 +13,12 @@ def fetch_train_data():
 
 
 def feature_data(dataframe):
-    extract_title(df) 
-    extract_deck(df) 
+    extract_title(df)
+    extract_deck(df)
     extract_family(df)
     extract_age_class(df)
     extract_fare_per_person(df)
-    
-    print(df) 
+    print(df)
 
     return dataframe
 
@@ -34,6 +33,8 @@ def extract_title(df: pd.DataFrame):
 
 
 def substrings_in_string(big_string: str, substrings):
+    if type(big_string) is float:
+        return np.nan
     for substring in substrings:
         if big_string.find(substring) != -1:
             return substring
@@ -61,17 +62,20 @@ def replace_titles(x):
 
 def extract_deck(df):
     cabin_list = ['A', 'B', 'C', 'D', 'E', 'F', 'T', 'G', 'Unknown']
-    df['Deck']=df['Cabin'].map(lambda x: substrings_in_string(x, cabin_list))
+    df['Deck'] = df['Cabin'].map(lambda x: substrings_in_string(x, cabin_list))
+
 
 def extract_family(df):
-    cabin_list = ['A', 'B', 'C', 'D', 'E', 'F', 'T', 'G', 'Unknown']
-    df['Deck']=df['Cabin'].map(lambda x: substrings_in_string(x, cabin_list))
+    df['Family_Size'] = df['SibSp'] + df['Parch']
+
 
 def extract_age_class(df):
-    df['Age*Class']=df['Age']*df['Pclass']
+    df['Age_Class'] = df['Age'] * df['Pclass']
+
 
 def extract_fare_per_person(df):
-    df['Fare_Per_Person']=df['Fare']/(df['Family_Size']+1)
+    df['Fare_Per_Person'] = df['Fare'] / (df['Family_Size'] + 1)
+
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
     """Downloads a blob from the bucket."""
@@ -102,6 +106,33 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     )
 
 
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+    # The path to your file to upload
+    # source_file_name = "local/path/to/file"
+    # The ID of your GCS object
+    # destination_blob_name = "storage-object-name"
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)
+
+    print(
+        "File {} uploaded to {}.".format(
+            source_file_name, destination_blob_name
+        )
+    )
+
+
 if __name__ == "__main__":
     df = fetch_train_data()
     df = feature_data(df)
+    featured_data_path = "titanic_featured_data.csv"
+    df.to_csv(featured_data_path)
+    upload_blob(
+        "feature-titanic-data", featured_data_path, "titanic_featured_data.csv"
+    )

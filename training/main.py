@@ -1,3 +1,4 @@
+import pickle
 import re
 
 import pandas as pd
@@ -6,9 +7,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
+
 def fetch_train_data():
-    bucket_name = "raw-titanic-data"
-    source_file = "train_data.csv"
+    bucket_name = "feature-titanic-data"
+    source_file = "titanic_featured_data.csv"
     train_data_path = "train_data.csv"
     download_blob(bucket_name, source_file, train_data_path)
     df = pd.read_csv(train_data_path)
@@ -40,7 +42,7 @@ def train_model_from_data(train_data_df):
     train_data_df['Sex'].replace({'male': 0, 'female': 1}, inplace=True)
 
     train_data_df.drop(
-        ['Ticket', 'PassengerId', 'Name', 'Salutation', "Fare", 'Surname'],
+        ['Ticket', 'PassengerId', 'Name', 'Salutation', "Fare", 'Surname', 'Title', 'Deck', 'Fare_Per_Person', 'Age_Class'],
         axis=1,
         inplace=True
     )
@@ -52,12 +54,12 @@ def train_model_from_data(train_data_df):
         X, y, test_size=0.2, random_state=42
     )
 
-    model1 = LogisticRegression()
-    model1.fit(X_train, y_train)
-    pred = model1.predict(X_test)
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
     log_acc = accuracy_score(pred, y_test)
     print(log_acc)
-    return model1
+    return model
 
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
@@ -89,6 +91,28 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
     )
 
 
+def upload_blob(bucket_name, source_file_name, destination_blob_name):
+    """Uploads a file to the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+    # The path to your file to upload
+    # source_file_name = "local/path/to/file"
+    # The ID of your GCS object
+    # destination_blob_name = "storage-object-name"
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)
+
+    print(
+        "File {} uploaded to {}.".format(
+            source_file_name, destination_blob_name
+        )
+    )
+
+
 def split_it(data):
     result = re.search('^.*,(.*)\.\s.*$', data)
     if result.group(1) not in [' Mr', ' Miss', ' Mrs', ' Master']:
@@ -100,3 +124,10 @@ def split_it(data):
 if __name__ == "__main__":
     df = fetch_train_data()
     trained_model = train_model_from_data(df)
+    trained_model_pickle_path = "trained_model.pkl"
+    with open(trained_model_pickle_path, 'wb') as model_file:
+        pickle.dump(trained_model, model_file)
+    upload_blob(
+        "trained-titanic-model", trained_model_pickle_path,
+        "logistic_regression.pkl"
+    )
