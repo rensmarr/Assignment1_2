@@ -7,8 +7,9 @@ from google.cloud import storage
 PATH = pathlib.Path().resolve()
 
 
-def ingest(source_url):
-    titanic_data = pd.read_csv(source_url)
+def ingest():
+    download_blob('kaggle-mock', 'train.csv', 'train.csv')
+    titanic_data = pd.read_csv('train.csv')
     train_data_path = f"{PATH}/titanic_train_data.csv"
     titanic_data.to_csv(train_data_path)
 
@@ -43,7 +44,37 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     )
 
 
-if __name__ == "__main__":
-    ingest(
-        "https://storage.googleapis.com/kagglesdsdata/competitions/3136/26502/train.csv?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1632327157&Signature=gwa3Sv1o%2FtbCa7pqzsWM4rnEKta168eZOl2Ox8ADtfrhJRdXV9ZbtD0YLfMkFGbJujUeGiQGw38r1h3RBKB9g4lfuC8wZObv9Ct9%2FGcE7MGqKtV4ljyvnRNnB6m1BlUA7FPCcq8z5pRwShyEadwl5V8urihPOG5OCmxZeTwTwAb%2BP1XUHy7J9NzCfbPsxbemCrcsUgXjz32hHR5f6uxEoJZUREgbQDCfJtSYv3qx7baQ2w71SIv55g2VRID4p9%2BFiyOZnhDvWV9ruKYOXWXoudE2MyaQHi3XWVx2Ha%2BPUhNEVK4teEY1gkFAwMfVQjHM2WZqRDXzwzoERsgB0d3SHA%3D%3D&response-content-disposition=attachment%3B+filename%3Dtrain.csv"
+def download_blob(bucket_name, source_blob_name, destination_file_name):
+    """Downloads a blob from the bucket."""
+    # The ID of your GCS bucket
+    # bucket_name = "your-bucket-name"
+
+    # The ID of your GCS object
+    # source_blob_name = "storage-object-name"
+
+    # The path to which the file should be downloaded
+    # destination_file_name = "local/path/to/file"
+
+    storage_client = storage.Client()
+
+    bucket = storage_client.bucket(bucket_name)
+
+    # Construct a client side representation of a blob.
+    # Note `Bucket.blob` differs from `Bucket.get_blob` as it doesn't retrieve
+    # any content from Google Cloud Storage. As we don't need additional data,
+    # using `Bucket.blob` is preferred here.
+    blob = bucket.blob(source_blob_name)
+    blob.download_to_filename(destination_file_name)
+
+    print(
+        "Downloaded storage object {} from bucket {} to local file {}.".format(
+            source_blob_name, bucket_name, destination_file_name
+        )
     )
+
+
+import requests
+
+if __name__ == "__main__":
+    ingest()
+    requests.get("http://feature-engineering:5000/feature")

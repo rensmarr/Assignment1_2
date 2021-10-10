@@ -42,7 +42,10 @@ def train_model_from_data(train_data_df):
     train_data_df['Sex'].replace({'male': 0, 'female': 1}, inplace=True)
 
     train_data_df.drop(
-        ['Ticket', 'PassengerId', 'Name', 'Salutation', "Fare", 'Surname', 'Title', 'Deck', 'Fare_Per_Person', 'Age_Class'],
+        [
+            'Ticket', 'PassengerId', 'Name', 'Salutation', "Fare", 'Surname',
+            'Title', 'Deck', 'Fare_Per_Person', 'Age_Class'
+        ],
         axis=1,
         inplace=True
     )
@@ -121,7 +124,25 @@ def split_it(data):
         return result.group(1)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+#     df = fetch_train_data()
+#     trained_model = train_model_from_data(df)
+#     trained_model_pickle_path = "trained_model.pkl"
+#     with open(trained_model_pickle_path, 'wb') as model_file:
+#         pickle.dump(trained_model, model_file)
+#     upload_blob(
+#         "trained-titanic-model", trained_model_pickle_path,
+#         "logistic_regression.pkl"
+#     )
+
+from flask import Flask
+
+app = Flask(__name__)
+app.config["DEBUG"] = True
+
+
+@app.route('/train', methods=['GET'])
+def train():
     df = fetch_train_data()
     trained_model = train_model_from_data(df)
     trained_model_pickle_path = "trained_model.pkl"
@@ -131,3 +152,7 @@ if __name__ == "__main__":
         "trained-titanic-model", trained_model_pickle_path,
         "logistic_regression.pkl"
     )
+    return "OK"
+
+
+app.run(host='0.0.0.0', port=5001)

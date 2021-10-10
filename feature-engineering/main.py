@@ -1,6 +1,6 @@
+import numpy as np
 import pandas as pd
 from google.cloud import storage
-import numpy as np
 
 
 def fetch_train_data():
@@ -12,7 +12,7 @@ def fetch_train_data():
     return df
 
 
-def feature_data(dataframe):
+def feature_data(df):
     extract_title(df)
     extract_deck(df)
     extract_family(df)
@@ -20,7 +20,7 @@ def feature_data(dataframe):
     extract_fare_per_person(df)
     print(df)
 
-    return dataframe
+    return df
 
 
 def extract_title(df: pd.DataFrame):
@@ -128,7 +128,24 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     )
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+#     df = fetch_train_data()
+#     df = feature_data(df)
+#     featured_data_path = "titanic_featured_data.csv"
+#     df.to_csv(featured_data_path)
+#     upload_blob(
+#         "feature-titanic-data", featured_data_path, "titanic_featured_data.csv"
+#     )
+
+from flask import Flask
+import requests
+
+app = Flask(__name__)
+app.config["DEBUG"] = True
+
+
+@app.route('/feature', methods=['GET'])
+def feature():
     df = fetch_train_data()
     df = feature_data(df)
     featured_data_path = "titanic_featured_data.csv"
@@ -136,3 +153,8 @@ if __name__ == "__main__":
     upload_blob(
         "feature-titanic-data", featured_data_path, "titanic_featured_data.csv"
     )
+    requests.get("http://training:5001/train")
+    return "OK"
+
+
+app.run(host='0.0.0.0', port=5000)

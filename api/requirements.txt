@@ -1,5 +1,5 @@
 pandas
 google-cloud-storage
-numpy
 flask
-requests
+scikit-learn
+redis
