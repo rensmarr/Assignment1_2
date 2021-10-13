@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 import pandas as pd
 import redis
+import requests
 from flask import Flask, json, request
 from google.cloud import storage
 
@@ -72,11 +73,14 @@ def predict_perf():
     # receive the prediction request data as the message body
     content = request.get_json()
     hash = dict_hash(content)
-    if redis.exists(hash):
-        return redis.get(hash).decode()
+    cached_response = requests.post("http://cache:5003/cache/get", json={"key": hash})
+    
+    if cached_response.text != "Not found":
+        return cached_response.text
+    
     df = pd.read_json(json.dumps(content), orient='records')
     resp = model.predict(df)
-    redis.set(hash, str(resp))
+    requests.post("http://cache:5003/cache/set", json={"key": hash, "value": str(resp)})
     return str(resp)
 
 

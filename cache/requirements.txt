@@ -1,0 +1,5 @@
+pandas
+google-cloud-storage
+flask
+scikit-learn
+redis

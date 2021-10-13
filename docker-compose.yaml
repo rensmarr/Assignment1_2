@@ -7,6 +7,7 @@ services:
       - "5002:5002"
     depends_on:
       - training
+      - cache
   redis:
     image: "redis:alpine"
   data-ingestion:
@@ -26,3 +27,8 @@ services:
       - "5001:5001"
     depends_on:
       - feature-engineering
+  cache:
+    image: cache
+    build: cache/.
+    ports: 
+      - "5003:5003"
