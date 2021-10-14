@@ -8,6 +8,6 @@ RUN pip install -r requirements.txt
 
 COPY . /usr/src/app
 
-ENV GOOGLE_APPLICATION_CREDENTIALS="/usr/src/app/key.json"
+ENV GOOGLE_APPLICATION_CREDENTIALS="/Assignment1_2/data-ingestion/key.json"
 
 CMD [ "python", "main.py" ]
